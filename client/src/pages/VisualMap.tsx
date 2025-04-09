@@ -22,30 +22,24 @@ export const VisualMap = () => {
     // We are likely going to use a useEffect hook to query the api for relevant map information
     const mapInfo = useRef<MapInfo>({heatmapProps: {latlngs: []}});
     const [markers, setMarkers] = useState<ReactNode>([]);
-    const [bounds, setBounds] = useState<LatLngBounds>(new LatLngBounds(new LatLng(-90, 180), new LatLng(90, -180))); 
+    const tbounds = new LatLngBounds(new LatLng(0,0), new LatLng(0,180));
+    const [bounds, setBounds] = useState<LatLngBounds>(new LatLngBounds(new LatLng(37.42256837427797, -124.01365575321213), new LatLng(44.24523729658361, -100.0634604407121))); 
     const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
         updateSelectedMode(selectedMode, mapInfo, bounds, setLoading, setMarkers);
     },[selectedMode]);
-
-    // useEffect(() => {
-    //     updateBounds(selectedMode, mapInfo, bounds, setMapInfo, setMarkers)
-    // }, [bounds]);
-
     
     return (
         <div id="super-container">
         <div className="layout-container">
-            {loading ?  <LoadingElement/> : (
-                <MapContainer center={[41, -112]} zoom={6} scrollWheelZoom={false}>
+                <MapContainer center={bounds.getCenter()} zoom={6} scrollWheelZoom={false}>
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    {markers}
+                    {loading ? <LoadingElement/> : markers}
                     <MapEventHandler setBounds={setBounds}/>
                 </MapContainer>
-            )}
         </div>
         <div className="sidebar-container" data-hidden={sidebarHidden}>
             <button type="button"
@@ -92,20 +86,6 @@ const updateSelectedMode = async (
                 break;
         }
         setLoading(false);
-}
-
-const updateBounds = async (
-    selectedMode: MapViewType,
-    mapInfo: MapInfo,
-    bounds: LatLngBounds,
-    setMapInfo: React.Dispatch<React.SetStateAction<MapInfo>>,
-    setMarkers: React.Dispatch<React.SetStateAction<ReactNode>>
-) => {
-    switch (selectedMode.valueOf()) {
-        case MapViewType.HEAT: {
-            
-        }
-    }
 }
 
 const heatmapCall = async (startDate: Date, endDate: Date) => {
