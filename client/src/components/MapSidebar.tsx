@@ -24,7 +24,7 @@ export const MapSidebar = ({selectedMode, setSelectedMode, loading} : SidebarPro
     return (
         <div className="sidebar-container" data-hidden={sidebarHidden}>
             <div id="hidebar">
-                {loading ? <LoadingElement/> : <span/>}
+                {loading ? <LoadingElement/> : <span style={{"width" : 40}}/>}
                 <span id="sidebar-title">Datasets</span>
                 <button type="button"
                         id="hide-btn"
