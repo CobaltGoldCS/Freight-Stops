@@ -18,7 +18,6 @@ interface MapInfo {
 
 export const VisualMap = () => {
     const [selectedMode, setSelectedMode] = useState<MapViewType>(MapViewType.NONE);
-    const [sidebarHidden, setSidebarHidden] = useState<boolean>(false);
     // We are likely going to use a useEffect hook to query the api for relevant map information
     const mapInfo = useRef<MapInfo>({heatmapProps: {latlngs: []}});
     const [markers, setMarkers] = useState<ReactNode>([]);
@@ -37,18 +36,11 @@ export const VisualMap = () => {
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    {loading ? <LoadingElement/> : markers}
+                    {!loading && markers}
                     <MapEventHandler setBounds={setBounds}/>
                 </MapContainer>
         </div>
-        <div className="sidebar-container" data-hidden={sidebarHidden}>
-            <button type="button"
-                    id="hide-btn"
-                    onClick={() => setSidebarHidden(!sidebarHidden)}>
-                {sidebarHidden ? "<" : ">"}
-            </button>
-            {!sidebarHidden && <MapSidebar selectedMode={selectedMode} setSelectedMode={setSelectedMode}/>}
-        </div>
+        <MapSidebar selectedMode={selectedMode} setSelectedMode={setSelectedMode} loading={loading}/>
         </div>
     )
 }
