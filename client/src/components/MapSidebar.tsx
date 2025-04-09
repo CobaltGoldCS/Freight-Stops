@@ -3,8 +3,9 @@ import React from "react";
 export enum MapViewType {
     NONE = 0,
     STOPS = 1,
-    ROUTES = 2,
-    HEAT = 3,
+    INTO_UTAH = 2,
+    OUT_OF_UTAH = 3,
+    HEAT = 4,
 }
 
 
@@ -22,9 +23,12 @@ export const MapSidebar = ({selectedMode, setSelectedMode} : SidebarProps) => {
             <SelectModeButton text={"Truck Stops"}
                               disabled={selectedMode === MapViewType.STOPS}
                               onclick={() => setSelectedMode(MapViewType.STOPS)} />
-            <SelectModeButton text={"Routes"}
-                              disabled={selectedMode === MapViewType.ROUTES}
-                              onclick={() => setSelectedMode(MapViewType.ROUTES)} />
+            <SelectModeButton text={"Freight Routes into Utah"}
+                              disabled={selectedMode === MapViewType.INTO_UTAH}
+                              onclick={() => setSelectedMode(MapViewType.INTO_UTAH)} />
+            <SelectModeButton text={"Freight Routes from Utah"}
+                              disabled={selectedMode === MapViewType.OUT_OF_UTAH}
+                              onclick={() => setSelectedMode(MapViewType.OUT_OF_UTAH)} />
             <SelectModeButton text={"Heatmap"}
                               disabled={selectedMode === MapViewType.HEAT}
                               onclick={() => setSelectedMode(MapViewType.HEAT)} />

@@ -73,10 +73,13 @@ const updateSelectedMode = async (
                 mapInfo.current.stopMarkerProps = {markers: [new MarkerModel(40.74404335285939, -111.89270459860522, "red")]};
                 setMarkers(StopMarkers(mapInfo.current.stopMarkerProps))
                 break;
-            case MapViewType.ROUTES:
-                //mapInfo.current.routeProps = {routes: [new Route([[41.742575, -111.81137], [40.7605868, -111.8335]])]};
-                //setMarkers(Routes(mapInfo.current.routeProps));
+            case MapViewType.INTO_UTAH:
                 result = (await toUtahCall(new Date(2023, 0,1), new Date(2023,1,0))).result;
+                mapInfo.current.routeProps = {routes: result}
+                setMarkers(Routes(mapInfo.current.routeProps))
+                break;
+            case MapViewType.OUT_OF_UTAH: 
+                result = (await fromUtahCall(new Date(2023, 0,1), new Date(2023,1,0))).result;
                 mapInfo.current.routeProps = {routes: result}
                 setMarkers(Routes(mapInfo.current.routeProps))
                 break;
@@ -111,7 +114,7 @@ const heatmapCall = async (startDate: Date, endDate: Date) => {
         headers: [["Content-Type", "application/json"], ],
         body: JSON.stringify({
             month: startDate.getMonth() + 1,
-            eps: 0.001,
+            eps: 0.00005,
             minSamples: 3,
             startDate: startDate.toISOString(),
             endDate: endDate.toISOString(),
@@ -135,6 +138,30 @@ const heatmapCall = async (startDate: Date, endDate: Date) => {
 
 const toUtahCall = async (startDate: Date, endDate: Date) => {
     let response = await fetch(`/api/queries/to_utah`, {
+        method: "POST",
+        headers: [["Content-Type", "application/json"], ],
+        body: JSON.stringify({
+            month: startDate.getMonth() + 1,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+        })
+    });
+    
+    let jobId: number = (await response.json())["jobId"];
+    let result = await waitUntilResult(jobId);
+    result.result = result.result.reduce(
+        (entryMap: any, e: any) => entryMap.set(e.route_id, [...entryMap.get(e.route_id)||[],
+            [e.latitude, e.longitude]
+        ]),
+        new Map()
+    ).values().map((value: LatLngTuple[]) => new Route(value));
+
+    return result;
+}
+
+
+const fromUtahCall = async (startDate: Date, endDate: Date) => {
+    let response = await fetch(`/api/queries/from_utah`, {
         method: "POST",
         headers: [["Content-Type", "application/json"], ],
         body: JSON.stringify({
