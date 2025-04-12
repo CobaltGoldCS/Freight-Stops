@@ -6,10 +6,9 @@ import "../assets/calendar.css";
 
 export enum MapViewType {
     NONE = 0,
-    STOPS = 1,
-    INTO_UTAH = 2,
-    OUT_OF_UTAH = 3,
-    HEAT = 4,
+    INTO_UTAH = 1,
+    OUT_OF_UTAH = 2,
+    HEAT = 3,
 }
 
 
@@ -33,9 +32,6 @@ export const MapSidebar = ({selectedMode, setSelectedMode, loading, startDate, s
             setStartDate(start);
             setEndDate(end);
     };
-
-    const superContainer = document.getElementById("super-container");
-
     return (
         <div className="sidebar-container" data-hidden={sidebarHidden}>
             <div id="hidebar">
@@ -49,16 +45,13 @@ export const MapSidebar = ({selectedMode, setSelectedMode, loading, startDate, s
             </div>
             {!sidebarHidden && (
                 <div id="map-sidebar">
-                <SelectModeButton text={"Truck Stops"}
-                                disabled={selectedMode === MapViewType.STOPS}
-                                onclick={() => setSelectedMode(MapViewType.STOPS)} />
                 <SelectModeButton text={"Freight Routes into Utah"}
                                 disabled={selectedMode === MapViewType.INTO_UTAH}
                                 onclick={() => setSelectedMode(MapViewType.INTO_UTAH)} />
                 <SelectModeButton text={"Freight Routes from Utah"}
                                 disabled={selectedMode === MapViewType.OUT_OF_UTAH}
                                 onclick={() => setSelectedMode(MapViewType.OUT_OF_UTAH)} />
-                <SelectModeButton text={"Heatmap"}
+                <SelectModeButton text={"Heatmap of suspected Stops"}
                                 disabled={selectedMode === MapViewType.HEAT}
                                 onclick={() => setSelectedMode(MapViewType.HEAT)} />
                 <DatePicker
