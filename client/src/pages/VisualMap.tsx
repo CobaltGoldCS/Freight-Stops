@@ -28,7 +28,7 @@ export const VisualMap = () => {
     const [endDate , setEndDate] = useState<Date>(new Date(2023, 0, 31))
 
     useEffect(() => {
-        if (endDate == null) {
+        if (endDate == null || startDate.getMonth() != endDate.getMonth()) {
             return;
         }
         updateSelectedMode(
@@ -40,7 +40,7 @@ export const VisualMap = () => {
             startDate,
             endDate
         );
-    },[selectedMode, startDate, endDate]);
+    },[selectedMode, endDate]);
     
     return (
         <div id="super-container">
@@ -86,7 +86,7 @@ const updateSelectedMode = async (
                 setMarkers(Routes(mapInfo.current.routeProps))
                 break;
             case MapViewType.OUT_OF_UTAH: 
-                result = (await fromUtahCall(endDate, startDate)).result;
+                result = (await fromUtahCall(startDate, endDate)).result;
                 mapInfo.current.routeProps = {routes: result}
                 setMarkers(Routes(mapInfo.current.routeProps))
                 break;
@@ -127,11 +127,6 @@ const heatmapCall = async (startDate: Date, endDate: Date) => {
 
     return result;
 }
-
-// router.post('/to_utah', async (req: Request, res: Response) => {
-//     try {
-//         // Validate request body
-//         const { month, startDate, endDate } = utahBoundarySchema.parse(req.body);
 
 const toUtahCall = async (startDate: Date, endDate: Date) => {
     let response = await fetch(`/api/queries/to_utah`, {

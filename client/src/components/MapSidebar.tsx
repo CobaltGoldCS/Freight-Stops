@@ -30,7 +30,6 @@ export const MapSidebar = ({selectedMode, setSelectedMode, loading, startDate, s
     const [sidebarHidden, setSidebarHidden] = useState<boolean>(false);
     const onChange = (dates) => {
             const [start, end]: Date[] = dates;
-            console.log(`Start: ${start}, End ${end}`);
             setStartDate(start);
             setEndDate(end);
     };
