@@ -222,7 +222,7 @@ router.post('/from_utah', async (req: Request, res: Response) => {
             FROM month_${month.toString().padStart(2, '0')}_routes r
             INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
             ORDER BY r.route_id, r.timestamp
-            LIMIT 1000;
+            LIMIT 100000;
         `;
 
         const job = await queueService.submitQuery(query, {
@@ -278,7 +278,7 @@ router.post('/to_utah', async (req: Request, res: Response) => {
             FROM month_${month.toString().padStart(2, '0')}_routes r
             INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
             ORDER BY r.route_id, r.timestamp
-            LIMIT 1000;
+            LIMIT 100000;
         `;
 
         const job = await queueService.submitQuery(query, {

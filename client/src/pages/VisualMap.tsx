@@ -24,10 +24,23 @@ export const VisualMap = () => {
     const tbounds = new LatLngBounds(new LatLng(0,0), new LatLng(0,180));
     const [bounds, setBounds] = useState<LatLngBounds>(new LatLngBounds(new LatLng(37.42256837427797, -124.01365575321213), new LatLng(44.24523729658361, -100.0634604407121))); 
     const [loading, setLoading] = useState<boolean>(false);
+    const [startDate, setStartDate] = useState<Date>(new Date(2023, 0, 1))
+    const [endDate , setEndDate] = useState<Date>(new Date(2023, 0, 31))
 
     useEffect(() => {
-        updateSelectedMode(selectedMode, mapInfo, bounds, setLoading, setMarkers);
-    },[selectedMode]);
+        if (endDate == null) {
+            return;
+        }
+        updateSelectedMode(
+            selectedMode,
+            mapInfo,
+            bounds,
+            setLoading,
+            setMarkers,
+            startDate,
+            endDate
+        );
+    },[selectedMode, startDate, endDate]);
     
     return (
         <div id="super-container">
@@ -40,7 +53,13 @@ export const VisualMap = () => {
                     <MapEventHandler setBounds={setBounds}/>
                 </MapContainer>
         </div>
-        <MapSidebar selectedMode={selectedMode} setSelectedMode={setSelectedMode} loading={loading}/>
+        <MapSidebar selectedMode={selectedMode}
+                    setSelectedMode={setSelectedMode}
+                    loading={loading}
+                    startDate={startDate}
+                    endDate={endDate}
+                    setStartDate={setStartDate}
+                    setEndDate={setEndDate}/>
         </div>
     )
 }
@@ -50,7 +69,9 @@ const updateSelectedMode = async (
     mapInfo: React.MutableRefObject<MapInfo>,
     bounds: LatLngBounds,
     setLoading: React.Dispatch<boolean>,
-    setMarkers: React.Dispatch<React.SetStateAction<ReactNode>>
+    setMarkers: React.Dispatch<React.SetStateAction<ReactNode>>,
+    startDate: Date,
+    endDate: Date
 ) => {
         setLoading(true);
         let result;
@@ -60,17 +81,17 @@ const updateSelectedMode = async (
                 setMarkers(StopMarkers(mapInfo.current.stopMarkerProps))
                 break;
             case MapViewType.INTO_UTAH:
-                result = (await toUtahCall(new Date(2023, 0,1), new Date(2023,1,0))).result;
+                result = (await toUtahCall(startDate, endDate)).result;
                 mapInfo.current.routeProps = {routes: result}
                 setMarkers(Routes(mapInfo.current.routeProps))
                 break;
             case MapViewType.OUT_OF_UTAH: 
-                result = (await fromUtahCall(new Date(2023, 0,1), new Date(2023,1,0))).result;
+                result = (await fromUtahCall(endDate, startDate)).result;
                 mapInfo.current.routeProps = {routes: result}
                 setMarkers(Routes(mapInfo.current.routeProps))
                 break;
             case MapViewType.HEAT:
-                result = (await heatmapCall(new Date(2023, 0,1), new Date(2023,0,31))).result;
+                result = (await heatmapCall(startDate, endDate)).result;
                 mapInfo.current.heatmapProps =  {latlngs: result.heatmap_data};
                 setMarkers(<HeatmapLayer max={4} latlngs={mapInfo.current.heatmapProps.latlngs}/>);
                 break;
@@ -95,6 +116,10 @@ const heatmapCall = async (startDate: Date, endDate: Date) => {
 
     let jobId: number = (await heatmapResponse.json())["jobId"];
     let result = await waitUntilResult(jobId);
+
+    if (result.result == null) {
+        result.result.heatmap_data = [];
+    }
     
     result["result"]["heatmap_data"] = result["result"]["heatmap_data"].map(item => {
         return [item.latitude, item.longitude, item.count]
@@ -121,6 +146,10 @@ const toUtahCall = async (startDate: Date, endDate: Date) => {
     
     let jobId: number = (await response.json())["jobId"];
     let result = await waitUntilResult(jobId);
+
+    if (result.result == null) {
+        result.result = [];
+    }
     result.result = result.result.reduce(
         (entryMap: any, e: any) => entryMap.set(e.route_id, [...entryMap.get(e.route_id)||[],
             [e.latitude, e.longitude]
@@ -145,6 +174,10 @@ const fromUtahCall = async (startDate: Date, endDate: Date) => {
     
     let jobId: number = (await response.json())["jobId"];
     let result = await waitUntilResult(jobId);
+
+    if (result.result == null) {
+        result.result = [];
+    }
     result.result = result.result.reduce(
         (entryMap: any, e: any) => entryMap.set(e.route_id, [...entryMap.get(e.route_id)||[],
             [e.latitude, e.longitude]

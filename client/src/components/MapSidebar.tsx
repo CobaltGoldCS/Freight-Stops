@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { LoadingElement } from "./LoadingElement";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../assets/calendar.css";
 
 export enum MapViewType {
     NONE = 0,
@@ -14,13 +17,26 @@ export interface SidebarProps {
     selectedMode: MapViewType;
     setSelectedMode: React.Dispatch<React.SetStateAction<MapViewType>>;
     loading: boolean;
+    startDate: Date;
+    endDate: Date;
+    setStartDate: React.Dispatch<React.SetStateAction<Date>>; 
+    setEndDate: React.Dispatch<React.SetStateAction<Date>>; 
 }
 
 
 
-export const MapSidebar = ({selectedMode, setSelectedMode, loading} : SidebarProps) => {
+export const MapSidebar = ({selectedMode, setSelectedMode, loading, startDate, setStartDate, endDate, setEndDate} : SidebarProps) => {
 
     const [sidebarHidden, setSidebarHidden] = useState<boolean>(false);
+    const onChange = (dates) => {
+            const [start, end]: Date[] = dates;
+            console.log(`Start: ${start}, End ${end}`);
+            setStartDate(start);
+            setEndDate(end);
+    };
+
+    const superContainer = document.getElementById("super-container");
+
     return (
         <div className="sidebar-container" data-hidden={sidebarHidden}>
             <div id="hidebar">
@@ -46,6 +62,21 @@ export const MapSidebar = ({selectedMode, setSelectedMode, loading} : SidebarPro
                 <SelectModeButton text={"Heatmap"}
                                 disabled={selectedMode === MapViewType.HEAT}
                                 onclick={() => setSelectedMode(MapViewType.HEAT)} />
+                <DatePicker
+                    className="sidebar-item"
+                    wrapperClassName="sidebar-datepicker"
+                    selected={startDate}
+                    startDate={startDate}
+                    endDate={endDate}
+                    selectsRange
+                    onChange={onChange}
+                    showDisabledMonthNavigation
+                    dropdownMode="select"
+                    inline
+                    dateFormat="yyyy-MM-dd"
+                    minDate={new Date(2023, 0,1)}
+                    maxDate={new Date(2023, 11, 0)}
+                />
                 </div>
             )}
         </div>
@@ -61,8 +92,9 @@ interface SelectButtonProps {
 const SelectModeButton = ({text, disabled, onclick} : SelectButtonProps) => {
     return (
         <button type="button"
-            onClick={onclick}
-            disabled={disabled}>
+                className="sidebar-item"
+                onClick={onclick}
+                disabled={disabled}>
                 {text}
         </button>
     )
