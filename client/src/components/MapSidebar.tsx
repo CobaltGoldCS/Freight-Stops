@@ -35,7 +35,7 @@ export const MapSidebar = ({selectedMode, setSelectedMode, loading, startDate, s
     return (
         <div className="sidebar-container" data-hidden={sidebarHidden}>
             <div id="hidebar">
-                {loading ? <LoadingElement/> : <span style={{"width" : 40}}/>}
+                {loading ?  <span style={{"width" : 30}}/> : <LoadingElement/>}
                 <span id="sidebar-title">Datasets</span>
                 <button type="button"
                         id="hide-btn"

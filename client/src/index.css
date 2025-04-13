@@ -63,7 +63,7 @@ body {
   position: absolute;
   right: 0vw;
   top: 10vh;
-  margin-top: 15px;
+  margin-top: 10px;
   margin-right:10px;
   border-radius: 4px;
 }
@@ -77,6 +77,8 @@ body {
   display: none;
 }
 
+
+
 #map-sidebar {
   flex: 0 1 auto;
   display: flex;
@@ -88,9 +90,11 @@ body {
 
 .sidebar-item {
   padding: 10px;
-  margin-left: 5px;
-  margin-right: 5px;
   border: 1px solid darkgrey;
+}
+
+button.sidebar-item {
+  border-radius: 3px;
 }
 
 
@@ -108,13 +112,16 @@ body {
 .sidebar-container[data-hidden^="true"] > #hidebar {
   flex-direction: column;
   height: fit-content;
+  justify-content: center;
   gap: 5px;
 }
 
 
 #hide-btn {
-  padding: 10px;
-  margin: 5px;
+  padding: 10px 0px;
+  width: 3rem;
+  margin-bottom: 5px;
+  border-radius: 5px;
   border: 1px solid darkgrey;
   align-self: flex-end;
 }
@@ -127,9 +134,13 @@ body {
   display: none;
 }
 
+.sidebar-container[data-hidden^="true"] > #hidebar > .loader {
+  margin-left: 4.8px;
+}
+
 .loader {
-    width: 40px;
-    height: 37px;
+    width: 2.3rem;
+    height: 2.3rem;
     border-radius: 50%;
     margin-top: 8px;
     border-color: 5px solid rebeccapurple;
