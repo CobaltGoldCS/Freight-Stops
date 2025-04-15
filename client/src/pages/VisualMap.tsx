@@ -50,7 +50,7 @@ export const VisualMap = () => {
     return (
         <div id="super-container">
         <div className="layout-container">
-                <MapContainer center={bounds.getCenter()} zoom={6} scrollWheelZoom={false}>
+                <MapContainer center={bounds.getCenter()} zoom={6} scrollWheelZoom={true}>
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -104,10 +104,11 @@ const updateSelectedMode = async (
             if (e instanceof DOMException) {
                 console.log("Request Was Aborted");
             } else {
-                throw new TypeError("Unexpected Exception");
+                throw new TypeError(`Unexpected Exception ${e}`);
             }
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
 }
 
 const heatmapCall = async (startDate: Date, endDate: Date, abortController: AbortController) => {
