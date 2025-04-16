@@ -4,7 +4,6 @@ volumes:
   db_worker_node_modules:
   db_worker_python_packages:
   db_data:
-  cache:
 services:
   db:
     image: postgis/postgis:latest
@@ -33,9 +32,10 @@ services:
     env_file:
       - ./server/.env
     depends_on:
-      - db
-      - cache
-      - rabbitmq
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   client:
     build:
@@ -55,26 +55,13 @@ services:
       - ./db_worker:/app
       - db_worker_node_modules:/app/node_modules
       - db_worker_python_packages:/opt/venv/lib/python3.12/site-packages/
-
     env_file:
       - ./db_worker/.env
     depends_on:
-      - db
-      - cache
-      - rabbitmq
-  cache:
-    image: redis:latest
-    container_name: freight_cache
-    ports:
-      - "6379:6379"
-    volumes:
-      - cache:/data
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
   rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -84,7 +71,8 @@ services:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
     healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+      test: [ "CMD", "rabbitmqctl", "status" ]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s

@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { QueueService } from '../services/queue';
-import { z } from 'zod';
+import { date, z } from 'zod';
 
 const router = express.Router();
 const queueService = new QueueService();
@@ -32,19 +32,20 @@ const heatmapQuerySchema = z.object({
 
 // Schema for validating the Utah boundary request
 const utahBoundarySchema = z.object({
-    month: z.number().min(1).max(12),
     startDate: z.string().datetime(),
-    endDate: z.string().datetime()
+    endDate: z.string().datetime(),
+    month: z.number().min(1).max(12),
+    skipNumber: z.number().positive().optional(),
+    maxResults: z.number().positive().optional()
 }).refine((data) => {
     // Check if the date range is within the specified month
     const start = new Date(data.startDate);
     const end = new Date(data.endDate);
-    const monthStart = new Date(start.getFullYear(), data.month - 1, 1);
-    const monthEnd = new Date(start.getFullYear(), data.month, 0);
-    return start >= monthStart && end <= monthEnd;
+    const monthsMatch = start.getMonth() === (data.month - 1);
+    return start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear() && monthsMatch;
 }, {
-    message: "Date range must be within the specified month",
-    path: ["startDate", "endDate"]
+    message: `Date range must be within the specified month`,
+    path: ["startDate", "endDate"],
 });
 
 // Initialize queue connection
@@ -95,6 +96,7 @@ router.get('/status/:jobId', async (req: Request, res: Response) => {
         const job = await queueService.getQueryStatus(req.params.jobId);
         if (!job) {
             res.status(404).json({ error: 'Query job not found' });
+            return;
         }
         res.json(job);
     } catch (error) {
@@ -163,7 +165,6 @@ router.post('/heatmap', async (req: Request, res: Response) => {
             WHERE start_time >= '${startDate}'
             AND end_time <= '${endDate}';
         `;
-
         // Submit the query to the queue with additional parameters
         const job = await queueService.submitQuery(query, {
             type: 'heatmap',
@@ -196,7 +197,7 @@ router.post('/heatmap', async (req: Request, res: Response) => {
 router.post('/from_utah', async (req: Request, res: Response) => {
     try {
         // Validate request body
-        const { month, startDate, endDate } = utahBoundarySchema.parse(req.body);
+        const { month, startDate, endDate, skipNumber, maxResults } = utahBoundarySchema.parse(req.body);
 
         // Query to get all points from trucks that start in Utah and end outside
         const query = `
@@ -220,10 +221,16 @@ router.post('/from_utah', async (req: Request, res: Response) => {
                 r.timestamp,
                 ST_Y(r.location::geometry) as latitude,
                 ST_X(r.location::geometry) as longitude
-            FROM month_${month.toString().padStart(2, '0')}_routes r
-            INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            FROM (
+                SELECT 
+                    r.*,
+                    ROW_NUMBER() OVER (PARTITION BY r.route_id ORDER BY r.timestamp) as row_num
+                FROM month_${month.toString().padStart(2, '0')}_routes r
+                INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            ) r
+            WHERE r.row_num % ${skipNumber ? skipNumber : 3} = 1
             ORDER BY r.route_id, r.timestamp
-            LIMIT 1000;
+            LIMIT ${maxResults ? maxResults : 10000};
         `;
 
         const job = await queueService.submitQuery(query, {
@@ -253,9 +260,8 @@ router.post('/from_utah', async (req: Request, res: Response) => {
 router.post('/to_utah', async (req: Request, res: Response) => {
     try {
         // Validate request body
-        const { month, startDate, endDate } = utahBoundarySchema.parse(req.body);
-
         // Query to get all points from trucks that start outside Utah and end inside
+        const { month, startDate, endDate, skipNumber, maxResults } = utahBoundarySchema.parse(req.body);
         const query = `
             WITH qualifying_trucks AS (
                 SELECT DISTINCT route_id
@@ -275,12 +281,19 @@ router.post('/to_utah', async (req: Request, res: Response) => {
             SELECT 
                 r.route_id,
                 r.timestamp,
+                r.truck_id,
                 ST_Y(r.location::geometry) as latitude,
                 ST_X(r.location::geometry) as longitude
-            FROM month_${month.toString().padStart(2, '0')}_routes r
-            INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            FROM (
+                SELECT 
+                    r.*,
+                    ROW_NUMBER() OVER (PARTITION BY r.route_id ORDER BY r.timestamp) as row_num
+                FROM month_${month.toString().padStart(2, '0')}_routes r
+                INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            ) r
+            WHERE r.row_num % ${skipNumber ? skipNumber : 3} = 1
             ORDER BY r.route_id, r.timestamp
-            LIMIT 1000;
+            LIMIT ${maxResults ? maxResults : 10000};
         `;
 
         const job = await queueService.submitQuery(query, {
@@ -296,7 +309,7 @@ router.post('/to_utah', async (req: Request, res: Response) => {
         if (error instanceof z.ZodError) {
             res.status(400).json({
                 error: 'Invalid request format',
-                details: error.errors
+                details: error.errors,
             });
         } else {
             console.error('Error submitting to Utah query:', error);
