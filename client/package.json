@@ -15,7 +15,9 @@
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
     "lodash": "^4.17.21",
+    "prop-types": "^15.8.1",
     "react": "19.0.0",
+    "react-datepicker": "^8.3.0",
     "react-dom": "19.0.0",
     "react-leaflet": "^5.0.0-rc.2",
     "react-router": "^7.1.5"

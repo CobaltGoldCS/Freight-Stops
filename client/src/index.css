@@ -1,7 +1,5 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  font-family: "Helvetica Neue", helvetica, arial, sans-serif;
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
@@ -23,6 +21,12 @@ body {
   margin: 0;
 }
 
+.title {
+  height: 5vh;
+  padding: 2.5vh 2.5vh 2.5vh 2.5vh;
+  background-color: rebeccapurple;
+}
+
 .app {
   height: 100%;
 }
@@ -33,8 +37,8 @@ body {
 }
 
 #super-container {
-  display: flex;
-  flex-direction: row;
+  /* display: flex;
+  flex-direction: row; */
   height: 100%;
 }
 
@@ -52,114 +56,136 @@ body {
 
 .sidebar-container {
   display: flex;
+  background-color: #242424;
+  padding: 10px;
   flex-direction: column;
+  z-index: 1000;
+  position: absolute;
+  right: 0vw;
+  top: 10vh;
+  margin-top: 10px;
+  margin-right:10px;
+  border-radius: 4px;
 }
 
 .sidebar-container[data-hidden^="true"] {
   height: fit-content;
+  background-clip: padding-box;
 }
 
 .sidebar-container[data-hidden^="true"] > #map-sidebar {
   display: none;
 }
 
+
+
 #map-sidebar {
   flex: 0 1 auto;
   display: flex;
   flex-direction: column;
-  width: 200px;
+  width: 250px;
   gap: 5px;
   padding-top: 5px;
 }
 
-#map-sidebar > button {
+.sidebar-item {
   padding: 10px;
-  margin-left: 5px;
-  margin-right: 5px;
   border: 1px solid darkgrey;
-  
 }
 
+button.sidebar-item {
+  border-radius: 3px;
+}
+
+
+#hidebar {
+  width: inherit;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  justify-content: space-between;
+  height: 50px;
+}
+
+
+.sidebar-container[data-hidden^="true"] > #hidebar {
+  flex-direction: column;
+  height: fit-content;
+  justify-content: center;
+  gap: 5px;
+}
+
+
 #hide-btn {
-  padding: 10px;
-  margin: 5px;
+  padding: 10px 0px;
+  width: 3rem;
+  margin-bottom: 5px;
+  border-radius: 5px;
   border: 1px solid darkgrey;
   align-self: flex-end;
 }
 
-#loading {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 1;
+.sidebar-container[data-hidden^="true"] > #hidebar > #hide-btn {
+  margin-top: 2px;
 }
 
-
-/*----------------*/
-.messages {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  padding: 16px;
-  gap: 8px;
-}
-
-.message {
-  border: 1px solid #ccc;
-  padding: 16px;
-  border-radius: 4px;
-}
-
-.message span {
-  font-weight: bold;
-  color: rebeccapurple;
-}
-
-.input {
-  display: flex;
-  padding: 16px;
-  gap: 8px;
-}
-
-.input input {
-  flex: 1;
-  padding: 8px;
-}
-
-.title {
-  background-color: rebeccapurple;
-  padding: 16px;
-  color: white;
+#sidebar-title {
   font-weight: bold;
 }
 
-.new-letter {
-  background-color: rebeccapurple;
-  padding: 16px;
-  color: white;
-  border-radius: 64px;
-  display: inline-block;
-  text-decoration: none;
+.sidebar-container[data-hidden^="true"] > #hidebar > #sidebar-title {
+  display: none;
 }
 
-.letters {
-  padding: 16px;
+.sidebar-container[data-hidden^="true"] > #hidebar > .loader {
+  margin-left: 4.8px;
 }
 
-.new-letter-form {
-  padding: 16px;
+.loader {
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 50%;
+    margin-top: 8px;
+    border-color: 5px solid rebeccapurple;
+    position: relative;
+    animation: rotate 1s linear infinite;
+    align-self: flex-start;
 }
 
-.letter-list {
+.loader::before {
+    content: "";
+    box-sizing: border-box;
+    position: absolute;
+    inset: 0px;
+    border-radius: 50%;
+    border: 10px solid rebeccapurple;
+    animation: prixClipFix 2s linear infinite ;
+}
+
+@keyframes prixClipFix {
+    0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
+    25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
+    50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
+    75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
+    100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
+}
+
+
+/*---- Date Picker ----*/
+
+
+.react-datepicker {
+  font-size: 1em;
+  background-color: #242424;
+}
+
+.react-datepicker__input-container {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
 }
 
-.letter {
-  border: 1px solid #ccc;
-  padding: 16px;
-  border-radius: 4px;
+.sidebar-datepicker {
+  width: max-content;
+  flex: 1 1 0;
 }
+

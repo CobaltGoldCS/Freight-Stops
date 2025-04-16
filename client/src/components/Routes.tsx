@@ -4,7 +4,7 @@ import { Polyline } from "react-leaflet"
 
 export interface RouteProps {
     routes: Route[]
-} 
+}
 
 export class Route {
     positions: LatLngTuple[]
@@ -16,8 +16,12 @@ export class Route {
 
 export const Routes = (props: RouteProps) => {
     return props.routes.map((route, index) => {
-        return (
-            <Polyline key={index} positions={route.positions} />
-        )
+        let polyline: Polyline = <Polyline key={index} positions={route.positions} pathOptions={{
+            "color": "black",
+            "opacity": 0.5,
+            "fillOpacity": 0.5,
+            "weight": 1,
+        }} />;
+        return polyline;
     });
 }

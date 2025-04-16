@@ -35,6 +35,8 @@ const utahBoundarySchema = z.object({
     startDate: z.string().datetime(),
     endDate: z.string().datetime(),
     month: z.number().min(1).max(12),
+    skipNumber: z.number().positive().optional(),
+    maxResults: z.number().positive().optional()
 }).refine((data) => {
     // Check if the date range is within the specified month
     const start = new Date(data.startDate);
@@ -195,7 +197,7 @@ router.post('/heatmap', async (req: Request, res: Response) => {
 router.post('/from_utah', async (req: Request, res: Response) => {
     try {
         // Validate request body
-        const { month, startDate, endDate } = utahBoundarySchema.parse(req.body);
+        const { month, startDate, endDate, skipNumber, maxResults } = utahBoundarySchema.parse(req.body);
 
         // Query to get all points from trucks that start in Utah and end outside
         const query = `
@@ -219,10 +221,16 @@ router.post('/from_utah', async (req: Request, res: Response) => {
                 r.timestamp,
                 ST_Y(r.location::geometry) as latitude,
                 ST_X(r.location::geometry) as longitude
-            FROM month_${month.toString().padStart(2, '0')}_routes r
-            INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            FROM (
+                SELECT 
+                    r.*,
+                    ROW_NUMBER() OVER (PARTITION BY r.route_id ORDER BY r.timestamp) as row_num
+                FROM month_${month.toString().padStart(2, '0')}_routes r
+                INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            ) r
+            WHERE r.row_num % ${skipNumber ? skipNumber : 3} = 1
             ORDER BY r.route_id, r.timestamp
-            LIMIT 1000;
+            LIMIT ${maxResults ? maxResults : 10000};
         `;
 
         const job = await queueService.submitQuery(query, {
@@ -253,7 +261,7 @@ router.post('/to_utah', async (req: Request, res: Response) => {
     try {
         // Validate request body
         // Query to get all points from trucks that start outside Utah and end inside
-        const { month, startDate, endDate } = utahBoundarySchema.parse(req.body);
+        const { month, startDate, endDate, skipNumber, maxResults } = utahBoundarySchema.parse(req.body);
         const query = `
             WITH qualifying_trucks AS (
                 SELECT DISTINCT route_id
@@ -273,12 +281,19 @@ router.post('/to_utah', async (req: Request, res: Response) => {
             SELECT 
                 r.route_id,
                 r.timestamp,
+                r.truck_id,
                 ST_Y(r.location::geometry) as latitude,
                 ST_X(r.location::geometry) as longitude
-            FROM month_${month.toString().padStart(2, '0')}_routes r
-            INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            FROM (
+                SELECT 
+                    r.*,
+                    ROW_NUMBER() OVER (PARTITION BY r.route_id ORDER BY r.timestamp) as row_num
+                FROM month_${month.toString().padStart(2, '0')}_routes r
+                INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
+            ) r
+            WHERE r.row_num % ${skipNumber ? skipNumber : 3} = 1
             ORDER BY r.route_id, r.timestamp
-            LIMIT 1000;
+            LIMIT ${maxResults ? maxResults : 10000};
         `;
 
         const job = await queueService.submitQuery(query, {

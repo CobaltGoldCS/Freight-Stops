@@ -1,14 +1,12 @@
 import { MapContainer, TileLayer } from "react-leaflet"
-import { StopMarkerProps, StopMarkers } from "../components/StopMarkers"
+import { StopMarkerProps } from "../components/StopMarkers"
 import 'leaflet/dist/leaflet.css';
 import { MapSidebar, MapViewType } from "../components/MapSidebar";
 import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { RouteProps, Routes, Route } from "../components/Routes";
-import MarkerModel from "../Models/MarkerModel";
 import HeatmapLayer, { HeatLayerProps } from "../components/HeatmapLayer";
 import { MapEventHandler } from "../components/MapEventHandler";
 import { LatLng, LatLngBounds, LatLngTuple } from "leaflet";
-import { LoadingElement } from "../components/LoadingElement";
 
 interface MapInfo {
     stopMarkerProps?: StopMarkerProps;
@@ -18,43 +16,77 @@ interface MapInfo {
 
 export const VisualMap = () => {
     const [selectedMode, setSelectedMode] = useState<MapViewType>(MapViewType.NONE);
-    const [sidebarHidden, setSidebarHidden] = useState<boolean>(false);
-    // We are likely going to use a useEffect hook to query the api for relevant map information
-    const mapInfo = useRef<MapInfo>({heatmapProps: {latlngs: []}});
+    const mapInfo = useRef<MapInfo>({ heatmapProps: { latlngs: [] } });
     const [markers, setMarkers] = useState<ReactNode>([]);
-    const [bounds, setBounds] = useState<LatLngBounds>(new LatLngBounds(new LatLng(-90, 180), new LatLng(90, -180))); 
+    const [bounds, setBounds] = useState<LatLngBounds>(new LatLngBounds(new LatLng(37.42256837427797, -124.01365575321213), new LatLng(44.24523729658361, -100.0634604407121)));
     const [loading, setLoading] = useState<boolean>(false);
+    const [startDate, setStartDate] = useState<Date>(new Date(2023, 0, 1));
+    const [endDate, setEndDate] = useState<Date | null>(new Date(2023, 0, 31));
+    const [skipNumber, setSkipNumber] = useState<number>(3);
+    const [maxResults, setMaxResults] = useState<number>(10000);
+
+    const abortController = useRef(new AbortController());
+    const loadingTimeout = useRef<number>();
 
     useEffect(() => {
-        updateSelectedMode(selectedMode, mapInfo, bounds, setLoading, setMarkers);
-    },[selectedMode]);
+        if (endDate == null || startDate.getMonth() != endDate.getMonth()) {
+            setSelectedMode(MapViewType.NONE);
+            setLoading(false);
+            abortController.current.abort();
+            return;
+        }
+        abortController.current = new AbortController();
+        setLoading(true);
 
-    // useEffect(() => {
-    //     updateBounds(selectedMode, mapInfo, bounds, setMapInfo, setMarkers)
-    // }, [bounds]);
+        // Set a timeout to automatically stop loading after 60 seconds
+        loadingTimeout.current = setTimeout(() => {
+            setSelectedMode(MapViewType.NONE);
+            setLoading(false);
+            abortController.current.abort();
+        }, 60000);
 
-    
+        updateSelectedMode(
+            selectedMode,
+            mapInfo,
+            bounds,
+            setLoading,
+            abortController.current,
+            setMarkers,
+            startDate,
+            endDate,
+            skipNumber,
+            maxResults
+        );
+
+        return () => {
+            if (loadingTimeout.current) {
+                clearTimeout(loadingTimeout.current);
+            }
+        };
+    }, [selectedMode, endDate]);
+
     return (
         <div id="super-container">
         <div className="layout-container">
-            {loading ?  <LoadingElement/> : (
-                <MapContainer center={[41, -112]} zoom={6} scrollWheelZoom={false}>
+                <MapContainer center={bounds.getCenter()} zoom={6} scrollWheelZoom={true}>
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    {markers}
-                    <MapEventHandler setBounds={setBounds}/>
+                    {!loading && markers}
+                    <MapEventHandler setBounds={setBounds} />
                 </MapContainer>
-            )}
-        </div>
-        <div className="sidebar-container" data-hidden={sidebarHidden}>
-            <button type="button"
-                    id="hide-btn"
-                    onClick={() => setSidebarHidden(!sidebarHidden)}>
-                {sidebarHidden ? "<" : ">"}
-            </button>
-            {!sidebarHidden && <MapSidebar selectedMode={selectedMode} setSelectedMode={setSelectedMode}/>}
-        </div>
+            </div>
+            <MapSidebar selectedMode={selectedMode}
+                setSelectedMode={setSelectedMode}
+                loading={loading}
+                startDate={startDate}
+                endDate={endDate}
+                setStartDate={setStartDate}
+                setEndDate={setEndDate}
+                skipNumber={skipNumber}
+                setSkipNumber={setSkipNumber}
+                maxResults={maxResults}
+                setMaxResults={setMaxResults} />
         </div>
     )
 }
@@ -64,54 +96,52 @@ const updateSelectedMode = async (
     mapInfo: React.MutableRefObject<MapInfo>,
     bounds: LatLngBounds,
     setLoading: React.Dispatch<boolean>,
-    setMarkers: React.Dispatch<React.SetStateAction<ReactNode>>
+    shouldAbort: AbortController,
+    setMarkers: React.Dispatch<React.SetStateAction<ReactNode>>,
+    startDate: Date,
+    endDate: Date,
+    skipNumber: number,
+    maxResults: number
 ) => {
-        setLoading(true);
         let result;
-        switch (selectedMode.valueOf()) {
-            case MapViewType.STOPS:
-                mapInfo.current.stopMarkerProps = {markers: [new MarkerModel(40.74404335285939, -111.89270459860522, "red")]};
-                setMarkers(StopMarkers(mapInfo.current.stopMarkerProps))
-                break;
-            case MapViewType.ROUTES:
-                //mapInfo.current.routeProps = {routes: [new Route([[41.742575, -111.81137], [40.7605868, -111.8335]])]};
-                //setMarkers(Routes(mapInfo.current.routeProps));
-                result = (await toUtahCall(new Date(2023, 0,1), new Date(2023,1,0))).result;
-                mapInfo.current.routeProps = {routes: result}
-                setMarkers(Routes(mapInfo.current.routeProps))
-                break;
-            case MapViewType.HEAT:
-                result = (await heatmapCall(new Date(2023, 0,1), new Date(2023,0,31))).result;
-                mapInfo.current.heatmapProps =  {latlngs: result.heatmap_data};
-                setMarkers(<HeatmapLayer max={4} latlngs={mapInfo.current.heatmapProps.latlngs}/>);
-                break;
-            case MapViewType.NONE:
-                break;
+        try {
+            switch (selectedMode.valueOf()) {
+                case MapViewType.INTO_UTAH:
+                    result = (await toUtahCall(startDate, endDate, shouldAbort, skipNumber, maxResults)).result;
+                    mapInfo.current.routeProps = {routes: result}
+                    setMarkers(Routes(mapInfo.current.routeProps))
+                    break;
+                case MapViewType.OUT_OF_UTAH: 
+                    result = (await fromUtahCall(startDate, endDate, shouldAbort, skipNumber, maxResults)).result;
+                    mapInfo.current.routeProps = {routes: result}
+                    setMarkers(Routes(mapInfo.current.routeProps))
+                    break;
+                case MapViewType.HEAT:
+                    result = (await heatmapCall(startDate, endDate, shouldAbort)).result;
+                    mapInfo.current.heatmapProps =  {latlngs: result.heatmap_data};
+                    setMarkers(<HeatmapLayer max={4} latlngs={mapInfo.current.heatmapProps.latlngs}/>);
+                    break;
+                case MapViewType.NONE:
+                    break;
+            }
+        } catch(e) {
+            if (e instanceof DOMException) {
+                console.log("Request Was Aborted");
+            } else {
+                throw new TypeError(`Unexpected Exception ${e}`);
+            }
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
 }
 
-const updateBounds = async (
-    selectedMode: MapViewType,
-    mapInfo: MapInfo,
-    bounds: LatLngBounds,
-    setMapInfo: React.Dispatch<React.SetStateAction<MapInfo>>,
-    setMarkers: React.Dispatch<React.SetStateAction<ReactNode>>
-) => {
-    switch (selectedMode.valueOf()) {
-        case MapViewType.HEAT: {
-            
-        }
-    }
-}
-
-const heatmapCall = async (startDate: Date, endDate: Date) => {
+const heatmapCall = async (startDate: Date, endDate: Date, abortController: AbortController) => {
     let heatmapResponse = await fetch(`/api/queries/heatmap`, {
         method: "POST",
-        headers: [["Content-Type", "application/json"], ],
+        headers: [["Content-Type", "application/json"],],
         body: JSON.stringify({
             month: startDate.getMonth() + 1,
-            eps: 0.001,
+            eps: 0.00005,
             minSamples: 3,
             startDate: startDate.toISOString(),
             endDate: endDate.toISOString(),
@@ -119,36 +149,41 @@ const heatmapCall = async (startDate: Date, endDate: Date) => {
     });
 
     let jobId: number = (await heatmapResponse.json())["jobId"];
-    let result = await waitUntilResult(jobId);
-    
-    result["result"]["heatmap_data"] = result["result"]["heatmap_data"].map(item => {
+    let result = await waitUntilResult(jobId, abortController);
+
+    if (result.result == null) {
+        result.result.heatmap_data = [];
+    }
+
+    result["result"]["heatmap_data"] = result["result"]["heatmap_data"].map((item: any) => {
         return [item.latitude, item.longitude, item.count]
     });
 
     return result;
 }
 
-// router.post('/to_utah', async (req: Request, res: Response) => {
-//     try {
-//         // Validate request body
-//         const { month, startDate, endDate } = utahBoundarySchema.parse(req.body);
-
-const toUtahCall = async (startDate: Date, endDate: Date) => {
+const toUtahCall = async (startDate: Date, endDate: Date, abortController: AbortController, skipNumber: number, maxResults: number) => {
     let response = await fetch(`/api/queries/to_utah`, {
         method: "POST",
-        headers: [["Content-Type", "application/json"], ],
+        headers: [["Content-Type", "application/json"],],
         body: JSON.stringify({
             month: startDate.getMonth() + 1,
             startDate: startDate.toISOString(),
             endDate: endDate.toISOString(),
+            skipNumber: skipNumber,
+            maxResults: maxResults
         })
     });
-    
+
     let jobId: number = (await response.json())["jobId"];
-    let result = await waitUntilResult(jobId);
+    let result = await waitUntilResult(jobId, abortController);
+
+    if (result.result == null) {
+        result.result = [];
+    }
     result.result = result.result.reduce(
-        (entryMap: any, e: any) => entryMap.set(e.route_id, [...entryMap.get(e.route_id)||[],
-            [e.latitude, e.longitude]
+        (entryMap: any, e: any) => entryMap.set(e.route_id, [...entryMap.get(e.route_id) || [],
+        [e.latitude, e.longitude]
         ]),
         new Map()
     ).values().map((value: LatLngTuple[]) => new Route(value));
@@ -156,12 +191,42 @@ const toUtahCall = async (startDate: Date, endDate: Date) => {
     return result;
 }
 
-const waitUntilResult = async(jobId: number) => {
+const fromUtahCall = async (startDate: Date, endDate: Date, abortController: AbortController, skipNumber: number, maxResults: number) => {
+    let response = await fetch(`/api/queries/from_utah`, {
+        method: "POST",
+        headers: [["Content-Type", "application/json"],],
+        body: JSON.stringify({
+            month: startDate.getMonth() + 1,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+            skipNumber: skipNumber,
+            maxResults: maxResults
+        })
+    });
+
+    let jobId: number = (await response.json())["jobId"];
+    let result = await waitUntilResult(jobId, abortController);
+
+    if (result.result == null) {
+        result.result = [];
+    }
+    result.result = result.result.reduce(
+        (entryMap: any, e: any) => entryMap.set(e.route_id, [...entryMap.get(e.route_id) || [],
+        [e.latitude, e.longitude]
+        ]),
+        new Map()
+    ).values().map((value: LatLngTuple[]) => new Route(value));
+
+    return result;
+}
+
+const waitUntilResult = async (jobId: number, abortController: AbortController) => {
     let jobComplete = false;
     let result;
     while (!jobComplete) {
         let jobStatusResponse = await fetch(`/api/queries/status/${jobId}`, {
-            headers: [['cache-control', 'no-cache']]
+            headers: [['cache-control', 'no-cache']],
+            signal: abortController.signal
         });
 
         result = await jobStatusResponse.json();
@@ -175,6 +240,6 @@ const waitUntilResult = async(jobId: number) => {
             return;
         }
 
-        await new Promise(resolve => setTimeout(resolve,3000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
     }
 }
