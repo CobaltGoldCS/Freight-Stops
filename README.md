@@ -57,3 +57,14 @@ WHERE ST_Within(
     ST_MakeEnvelope(-114.064453, 37.026061, -109.054687, 42.008507, 4326)
 ) LIMIT 10;
 ```
+
+## How to use this software
+
+Navigate to the endpoint you have designated for the application to run. Assuming everything is set up properly, you should be on the map. Here, there are a few sections used for data visualization parameter inputs.
+
+1. The Datasets themselves come in several different buttons. Clicking one will cause the application to request and display the data.
+2. A calendar that allows you to pick the time range over which you want to see the data
+3. A route point sampling parameter. This is the number of points the application will skip before adding a point to the route-line. Higher numbers mean that you skip more points, improving performance at the cost of accuracy.
+4. The maximum number of results to return. For the routes this means the maximum number of points the application will attempt to retrieve and display on the map.
+
+This panel also includes a hide button, which you can click if you want a better view of the map.
