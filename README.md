@@ -1,86 +1,321 @@
 # Utah Freight Visualization and Analysis Software
-This initial setup of this app was taken from <a href="https://github.com/dittonjs/4610Spring25ClassExamples">Joseph Ditton's repo</a>. Thank you Professor Ditton!
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 
-**Features**
-- Visualization of routes along a map interface
-- Visualization of statistics relating to individual trips
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![PostGIS](https://img.shields.io/badge/PostGIS-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgis.net/)
+[![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-## Running the app locally
-1. Download <a href="https://www.docker.com/products/docker-desktop/">Docker Desktop</a>
-2. Run Docker Desktop as an administrator
-3. Open a terminal (as administrator) in the project's root directory (the folder with docker-compose.yml)
-4. Run `docker compose up`
-5. Open another terminal and run the following commands:
-    *   `docker exec freight_server npm run prisma-generate`
-    *   `docker exec freight_server npm run prisma-migrate`
-6. Restart the Server Container
-    1. This can be done in the Docker Desktop apps in the "Containers" tab
-        * Locate the container, click on it, and click the Restart icon.
-7. Visit `localhost:3000` and verify the server is running
-8. Set up the database: *see below*
+A visualization and analysis platform for freight movement and stop data in Utah.
 
+## Table of Contents
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Installation](#installation)
+- [Database Setup](#database-setup)
+- [Usage Guide](#usage-guide)
+- [Project Structure](#project-structure)
+- [Development Guide](#development-guide)
+- [License](#license)
 
-## Setting up the database. 
-Find the monthly-split data files here 
-<a href="https://usu.box.com/s/0r4puni3cx0mar4181faqvaj7uaku5l3">Stops</a>
-and here 
-<a href="https://usu.box.com/s/63ziurrmh5hrqutouw0x89ad0tpefxd8">Routes</a>
+## Features
 
-To fully download all of Routes data, you will need ~80GB of free storage.
+- **Interactive Map Visualization**
+  - Real-time display of truck routes and stops
+  - Customizable data filtering and sampling
+  - Heatmap generation for stop density analysis
+  - Route analysis for Utah boundary crossings
 
-1. Copy your data files into db_worker/monthly_route_data and db_worker/monthly_stop_data
-2. Ensure the docker containers are running.
-3. Open a terminal inside the db_worker directory.
-4. Run the commands 
-    * `python load_stop_data_into_db_parallel.py --month 1 --host localhost --password password` 
-    * `python load_route_data_into_db_parallel.py --month 1 --host localhost --password password`
-    * **\*Note\*** these python scripts will use a lot of CPU power. Use the --workers option to specify how many processors should be used
-5. Run these commands for as many months as you wish to have the data for.
-    * Please note that some of the "route" data files are very large and will take a while to load into the database.
-    * Also, pay attention to your storage, as running these scripts do not "Cut + Paste" but rather "Copy + Paste". You can remove the data files after they have been loaded into the database.
-6. Run the command `docker exec -it freight_db psql -U postgres -d mydatabase` and verify the tables were created using a command such as
-```sql
-SELECT * FROM month_01_routes LIMIT 10;
+- **Data Analysis**
+  - Time-based filtering of freight movements
+  - Route segmentation and analysis
+  - Stop duration and location analysis
+  - Customizable data sampling parameters
+
+## Technology Stack
+
+### Frontend
+- **React + TypeScript**: Modern UI framework with type safety
+- **Leaflet**: Interactive map visualization
+- **Vite**: Fast build tool and development server
+
+### Backend
+- **Express.js**: RESTful API server
+- **TypeScript**: Type-safe server code
+- **Zod**: Schema validation and type safety
+- **PostgreSQL**: Primary database
+- **PostGIS**: Spatial data processing
+- **RabbitMQ**: Message queue for async processing
+
+### Infrastructure
+- **Docker**: Containerization and deployment
+- **Docker Compose**: Multi-container orchestration
+
+## Installation
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- Git
+- Node.js (for development)
+
+### Setup Steps
+1. Clone the repository:
+   ```bash
+   git clone [repository-url]
+   cd freight-data
+   ```
+
+2. Start the Docker containers:
+   ```bash
+   docker compose up
+   ```
+
+3. Initialize the database:
+   ```bash
+   docker exec freight_server npm run prisma-generate
+   docker exec freight_server npm run prisma-migrate
+   ```
+
+4. Restart the server container:
+   - Open Docker Desktop
+   - Navigate to Containers
+   - Find and restart the `freight_server` container
+
+5. Verify the setup:
+   - Visit `http://localhost:3000`
+   - The application should be running
+
+## Database Setup
+
+### Data Sources
+- [Monthly Stop Data](https://usu.box.com/s/0r4puni3cx0mar4181faqvaj7uaku5l3)
+- [Monthly Route Data](https://usu.box.com/s/63ziurrmh5hrqutouw0x89ad0tpefxd8)
+
+> **Note**: Route data requires approximately 80GB of storage space.
+
+### Loading Data
+1. Copy data files to appropriate directories:
+   - Stop data: `db_worker/monthly_stop_data`
+   - Route data: `db_worker/monthly_route_data`
+
+2. Run data loading scripts:
+   ```bash
+   cd db_worker
+   python load_stop_data_into_db_parallel.py --month 1 --host localhost --password password
+   python load_route_data_into_db_parallel.py --month 1 --host localhost --password password
+   ```
+
+3. Verify data loading:
+   ```bash
+   docker exec -it freight_db psql -U postgres -d mydatabase
+   ```
+   ```sql
+   SELECT * FROM month_01_routes LIMIT 10;
+   SELECT * FROM month_01_stops LIMIT 10;
+   ```
+
+## Usage Guide
+
+### Getting Started
+1. Navigate to `http://localhost:3000` in your web browser
+2. The application will load with a map interface and a collapsible sidebar
+3. The sidebar contains all controls for data visualization and analysis
+
+### Data Visualization Controls
+
+#### Dataset Selection
+The application offers three main visualization modes:
+- **Freight Routes into Utah**: Shows routes that end within Utah's boundaries
+- **Freight Routes from Utah**: Shows routes that start within Utah's boundaries
+- **Heatmap of suspected Stops**: Displays a density-based visualization of truck stops
+
+To select a mode:
+1. Click the corresponding button in the sidebar
+2. The map will update to show the selected visualization type
+
+#### Date Range Selection
+1. Use the calendar interface in the sidebar to select your date range
+2. Click and drag to select multiple days, or click individual dates
+3. The date range is limited to the year 2023
+4. Both start and end dates must be selected to submit a query
+
+#### Route Visualization Parameters
+When viewing routes (into or from Utah), you can adjust:
+
+1. **Route Point Sampling**
+   - Controls the density of points shown on routes
+   - Higher values skip more points, improving performance
+   - Lower values show more detail but may impact performance
+   - Minimum value: 1 (shows all points)
+   - Default value: 3
+
+2. **Maximum Results**
+   - Limits the number of points displayed on the map
+   - Helps manage performance with large datasets
+   - Minimum value: 10,000 points
+   - Default value: 10,000
+
+#### Heatmap Parameters
+When using the heatmap visualization, you can adjust:
+
+1. **EPS (Epsilon)**
+   - Controls the radius of the density clusters
+   - Higher values create larger clusters
+   - Lower values create more detailed, smaller clusters
+   - Minimum value: 0.00001
+   - Default value: 0.00001
+
+2. **Minimum Samples**
+   - Sets the minimum number of points required to form a cluster
+   - Higher values require more points to create a visible cluster
+   - Lower values show more potential stop locations
+   - Minimum value: 1
+   - Default value: 1
+
+### Interface Features
+
+#### Map Navigation
+- **Zoom**: Use the mouse wheel or the +/- buttons
+- **Pan**: Click and drag the map
+- **Reset View**: Double-click to reset to the default view
+
+#### Sidebar Controls
+- **Hide/Show**: Click the arrow button to collapse/expand the sidebar
+- **Loading Indicator**: Shows when data is being processed
+- **Submit Query**: Click to apply your selected parameters and update the visualization
+
+### Best Practices
+
+1. **Performance Optimization**
+   - Start with higher sampling values for initial exploration
+   - Reduce sampling for detailed analysis of specific areas
+   - Use the maximum results limit to prevent overwhelming the visualization
+
+2. **Heatmap Analysis**
+   - Start with default EPS and minimum samples values
+   - Adjust EPS to focus on different scales of stop density
+   - Use minimum samples to filter out noise in the data
+
+3. **Route Analysis**
+   - Use the date range to focus on specific time periods
+   - Adjust sampling to balance detail and performance
+   - Zoom in on areas of interest for detailed route inspection
+
+### Troubleshooting
+
+1. **No Data Displayed**
+   - Verify date range is selected
+   - Check that parameters are within valid ranges
+   - Ensure the database is properly loaded with data
+
+2. **Performance Issues**
+   - Increase route point sampling
+   - Reduce maximum results
+
+3. **Visualization Problems**
+   - Clear browser cache
+   - Refresh the page
+   - Verify database connection
+
+## Project Structure
+
 ```
-and 
-```sql
-SELECT * FROM month_01_stops LIMIT 10;
+freight-data/
+├── client/                 # React frontend application
+│   ├── src/
+│   │   ├── components/    # Reusable UI components
+│   │   ├── pages/        # Main application pages
+│   │   └── types/        # TypeScript type definitions
+│   └── public/           # Static assets
+├── server/               # Express.js backend
+│   ├── src/
+│   │   ├── routes/      # API endpoints
+│   │   └── services/    # Business logic
+│   └── index.ts         # Entrypoint
+└── db_worker/           # Data processing scripts
+    ├── src/            # Python scripts
+    ├── monthly_route_data/ # Data files (in format month_##.csv)
+    ├── monthly_stop_data/ 
+    ├── load_route_data_into_db_parallel.py  # Data loading scripts
+    └── load_stop_data_into_db_parallel.py 
 ```
 
-Once the database has been setup, you can now visit localhost:3000 and make a query.
+## Development Guide
 
-## How to use this software
+### API Endpoints
 
-Navigate to the endpoint you have designated for the application to run. Assuming everything is set up properly, you should be on the map. Here, there are a few sections used for data visualization parameter inputs.
+The API server provides the following endpoints:
 
-1. The Datasets themselves come in several different buttons. Clicking one will cause the application to request and display the data.
-2. A calendar that allows you to pick the time range over which you want to see the data
-3. A route point sampling parameter. This is the number of points the application will skip before adding a point to the route-line. Higher numbers mean that you skip more points, improving performance at the cost of accuracy.
-4. The maximum number of results to return. For the routes this means the maximum number of points the application will attempt to retrieve and display on the map.
+- `/location` - Query points within geographical boundaries
+- `/status/:jobId` - Check query job status
+- `/heatmap` - Generate heatmap data
+- `/from_utah` - Get routes starting in Utah
+- `/to_utah` - Get routes ending in Utah
 
-This panel also includes a hide button, which you can click if you want a better view of the map.
+All endpoints use Zod schemas for validation and SQL injection prevention.
+
+### Database Worker
+
+The Database Worker handles data loading and processing:
+
+1. **Stop Data Loading**
+   - Parallel processing with multiple workers
+   - Data validation and transformation
+   - Efficient bulk loading
+   - Automatic index creation
+
+2. **Route Data Loading**
+   - Intelligent route segmentation
+   - Speed calculation and validation
+   - Stuck point detection
+   - Parallel processing
+
+### Client Overview
+The client is a React-based web application that provides an interactive interface for visualizing and analyzing freight data. It offers several key features for users:
+
+1. **Interactive Map Visualization**
+   - Displays truck routes and stops on a map interface
+   - Supports zooming, panning, and map interaction
+   - Shows geographical boundaries and regions of interest
+
+2. **Data Visualization Controls**
+   - Time range selection for filtering data
+   - Route point sampling controls to adjust visualization density
+   - Maximum results limit settings
+   - Dataset selection (routes, stops, heatmaps)
+
+3. **Heatmap Generation**
+   - Visual representation of stop density
+   - Configurable clustering parameters
+   - Time-based filtering of heatmap data
+
+4. **Route Analysis**
+   - Visualization of routes entering and exiting Utah
+   - Interactive route selection and inspection
+
+5. **User Interface Features**
+   - Collapsible sidebar for controls
+   - Loading indicators for data processing
+   - Interactive markers for stops and routes
+   - Responsive design for different screen sizes
+
+The client communicates with the API server to fetch and display data, providing a user-friendly interface for exploring and analyzing freight movement patterns.
 
 
+### Contributing
 
-# Detailed Development Oriented Guide
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-## A Brief Overview of The Tech Stack
+Please follow the existing code style and include tests for new features.
 
-### The Frontend
-The frontend uses React + TypeScript. To create the map and draw things on it, we are using the Leaflet library. The frontend serves as a way to easily interface with the database and visualize the data using the map.
+## License
 
-### The Backend
-There are two main pieces to the backend. First, there is the API server, which uses ExpressJS to handle requests from the frontend. The API server then sends a formal request for data to the database worker. The database worker (db_worker) takes the request, decides what operations it needs to do, and then executes the query. The API server and db_worker communicate using RabbitMQ, and message queue. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### The Database
-This application uses a PostgreSQL database with the PostGIS extension for handling the geographical data.
+## Acknowledgments
 
-All of these services are ran as docker containers.
-
-
-## A Deeper Look
-
-### The API Server
-The API server handles the HTTP requests sent from the client. It has the following endpoints
-
+- Initial setup based on [Joseph Ditton's repository](https://github.com/dittonjs/4610Spring25ClassExamples)
