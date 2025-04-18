@@ -56,7 +56,6 @@ router.post('/location', async (req: Request, res: Response) => {
         // Validate request body
         const { month, bounds } = locationQuerySchema.parse(req.body);
 
-        // TODO: parameterize the query. because we are using zod, sql injection should not be an issue, but it's good practice to do so
         const query = `
             SELECT *
             FROM ${month}
@@ -105,47 +104,6 @@ router.get('/status/:jobId', async (req: Request, res: Response) => {
     }
 });
 
-// TODO: remove this endpoint after development
-// DANGEROUS ENDPOINT: allows you to execute arbitrary SQL queries
-// I am adding this endpoint to make it easier to develop the frontend, but once we start
-// getting a better idea of what endpoints are needed, this should be removed.
-router.post('/dev/execute', async (req: Request, res: Response) => {
-    try {
-        // Validate request body
-        const { query } = devQuerySchema.parse(req.body);
-
-        // Basic protection against DROP TABLE statements
-        const normalizedQuery = query.toLowerCase().trim();
-        if (normalizedQuery.includes('drop table')) {
-            res.status(403).json({
-                error: 'DROP TABLE statements are not allowed for safety reasons'
-            });
-        }
-
-        // Submit the query to the queue with explicit type
-        const job = await queueService.submitQuery(query, {
-            type: 'regular'
-        });
-
-        res.json({
-            jobId: job.id,
-            status: job.status,
-            message: 'Query submitted successfully'
-        });
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            res.status(400).json({
-                error: 'Invalid request format',
-                details: error.errors
-            });
-        } else {
-            console.error('Error submitting development query:', error);
-            res.status(500).json({
-                error: 'Failed to submit query'
-            });
-        }
-    }
-});
 
 router.post('/heatmap', async (req: Request, res: Response) => {
     try {

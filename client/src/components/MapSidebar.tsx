@@ -3,6 +3,7 @@ import { LoadingElement } from "./LoadingElement";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../assets/calendar.css";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 
 export enum MapViewType {
     NONE = 0,
@@ -24,11 +25,16 @@ export interface SidebarProps {
     setSkipNumber: React.Dispatch<React.SetStateAction<number>>;
     maxResults: number;
     setMaxResults: React.Dispatch<React.SetStateAction<number>>;
+    eps: number;
+    setEps: React.Dispatch<React.SetStateAction<number>>;
+    minSamples: number;
+    setMinSamples: React.Dispatch<React.SetStateAction<number>>;
+    onSubmit: () => void;
 }
 
 
 
-export const MapSidebar = ({ selectedMode, setSelectedMode, loading, startDate, setStartDate, endDate, setEndDate, skipNumber, setSkipNumber, maxResults, setMaxResults }: SidebarProps) => {
+export const MapSidebar = ({ selectedMode, setSelectedMode, loading, startDate, setStartDate, endDate, setEndDate, skipNumber, setSkipNumber, maxResults, setMaxResults, eps, setEps, minSamples, setMinSamples, onSubmit }: SidebarProps) => {
 
     const [sidebarHidden, setSidebarHidden] = useState<boolean>(false);
     const onChange = (dates: [Date | null, Date | null] | null) => {
@@ -46,7 +52,7 @@ export const MapSidebar = ({ selectedMode, setSelectedMode, loading, startDate, 
                 <button type="button"
                     id="hide-btn"
                     onClick={() => setSidebarHidden(!sidebarHidden)}>
-                    {sidebarHidden ? "<" : ">"}
+                    {sidebarHidden ? <CaretLeft /> : <CaretRight />}
                 </button>
             </div>
             {!sidebarHidden && (
@@ -76,30 +82,69 @@ export const MapSidebar = ({ selectedMode, setSelectedMode, loading, startDate, 
                         maxDate={new Date(2023, 11, 0)}
                         disabled={loading}
                     />
-                    <div className="sidebar-item">
-                        <label htmlFor="skipNumber">Route Point Sampling:</label>
-                        <input
-                            type="number"
-                            id="skipNumber"
-                            min="1"
-                            value={skipNumber}
-                            onChange={(e) => setSkipNumber(Math.max(1, parseInt(e.target.value) || 1))}
-                            className="sidebar-input"
-                            disabled={loading}
-                        />
-                    </div>
-                    <div className="sidebar-item">
-                        <label htmlFor="maxResults">Max Results (min 10,000):</label>
-                        <input
-                            type="number"
-                            id="maxResults"
-                            min="10000"
-                            value={maxResults}
-                            onChange={(e) => setMaxResults(Math.max(10000, parseInt(e.target.value) || 10000))}
-                            className="sidebar-input"
-                            disabled={loading}
-                        />
-                    </div>
+                    {selectedMode === MapViewType.HEAT ? (
+                        <>
+                            <div className="sidebar-item">
+                                <label htmlFor="eps">EPS (min 0.00001):</label>
+                                <input
+                                    type="number"
+                                    id="eps"
+                                    min="0.00001"
+                                    step="0.00001"
+                                    value={eps}
+                                    onChange={(e) => setEps(Math.max(0.00001, parseFloat(e.target.value) || 0.00001))}
+                                    className="sidebar-input"
+                                    disabled={loading}
+                                />
+                            </div>
+                            <div className="sidebar-item">
+                                <label htmlFor="minSamples">Min Samples (min 1):</label>
+                                <input
+                                    type="number"
+                                    id="minSamples"
+                                    min="1"
+                                    value={minSamples}
+                                    onChange={(e) => setMinSamples(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="sidebar-input"
+                                    disabled={loading}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="sidebar-item">
+                                <label htmlFor="skipNumber">Route Point Sampling:</label>
+                                <input
+                                    type="number"
+                                    id="skipNumber"
+                                    min="1"
+                                    value={skipNumber}
+                                    onChange={(e) => setSkipNumber(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="sidebar-input"
+                                    disabled={loading}
+                                />
+                            </div>
+                            <div className="sidebar-item">
+                                <label htmlFor="maxResults">Max Results (min 10,000):</label>
+                                <input
+                                    type="number"
+                                    id="maxResults"
+                                    min="10000"
+                                    value={maxResults}
+                                    onChange={(e) => setMaxResults(Math.max(10000, parseInt(e.target.value) || 10000))}
+                                    className="sidebar-input"
+                                    disabled={loading}
+                                />
+                            </div>
+                        </>
+                    )}
+                    <button
+                        className="sidebar-item"
+                        onClick={onSubmit}
+                        disabled={loading || endDate === null}
+                    >
+                        Submit Query
+                    </button>
                 </div>
             )}
         </div>

@@ -5,7 +5,7 @@ function App() {
   return (
 
     <div className="app">
-      <div className="title">Freight Stops</div>
+      <div className="title">Utah Freight Routes and Stops Visualization Tool</div>
       <div className='container'>
         <Outlet />
       </div>

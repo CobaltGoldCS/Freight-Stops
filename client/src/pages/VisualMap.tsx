@@ -24,11 +24,13 @@ export const VisualMap = () => {
     const [endDate, setEndDate] = useState<Date | null>(new Date(2023, 0, 31));
     const [skipNumber, setSkipNumber] = useState<number>(3);
     const [maxResults, setMaxResults] = useState<number>(10000);
+    const [eps, setEps] = useState<number>(0.00005);
+    const [minSamples, setMinSamples] = useState<number>(3);
 
     const abortController = useRef(new AbortController());
     const loadingTimeout = useRef<number>();
 
-    useEffect(() => {
+    const handleSubmit = () => {
         if (endDate == null || startDate.getMonth() != endDate.getMonth()) {
             setSelectedMode(MapViewType.NONE);
             setLoading(false);
@@ -55,19 +57,15 @@ export const VisualMap = () => {
             startDate,
             endDate,
             skipNumber,
-            maxResults
+            maxResults,
+            eps,
+            minSamples
         );
-
-        return () => {
-            if (loadingTimeout.current) {
-                clearTimeout(loadingTimeout.current);
-            }
-        };
-    }, [selectedMode, endDate]);
+    };
 
     return (
         <div id="super-container">
-        <div className="layout-container">
+            <div className="layout-container">
                 <MapContainer center={bounds.getCenter()} zoom={6} scrollWheelZoom={true}>
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -76,7 +74,8 @@ export const VisualMap = () => {
                     <MapEventHandler setBounds={setBounds} />
                 </MapContainer>
             </div>
-            <MapSidebar selectedMode={selectedMode}
+            <MapSidebar
+                selectedMode={selectedMode}
                 setSelectedMode={setSelectedMode}
                 loading={loading}
                 startDate={startDate}
@@ -86,7 +85,13 @@ export const VisualMap = () => {
                 skipNumber={skipNumber}
                 setSkipNumber={setSkipNumber}
                 maxResults={maxResults}
-                setMaxResults={setMaxResults} />
+                setMaxResults={setMaxResults}
+                eps={eps}
+                setEps={setEps}
+                minSamples={minSamples}
+                setMinSamples={setMinSamples}
+                onSubmit={handleSubmit}
+            />
         </div>
     )
 }
@@ -101,48 +106,50 @@ const updateSelectedMode = async (
     startDate: Date,
     endDate: Date,
     skipNumber: number,
-    maxResults: number
+    maxResults: number,
+    eps: number,
+    minSamples: number
 ) => {
-        let result;
-        try {
-            switch (selectedMode.valueOf()) {
-                case MapViewType.INTO_UTAH:
-                    result = (await toUtahCall(startDate, endDate, shouldAbort, skipNumber, maxResults)).result;
-                    mapInfo.current.routeProps = {routes: result}
-                    setMarkers(Routes(mapInfo.current.routeProps))
-                    break;
-                case MapViewType.OUT_OF_UTAH: 
-                    result = (await fromUtahCall(startDate, endDate, shouldAbort, skipNumber, maxResults)).result;
-                    mapInfo.current.routeProps = {routes: result}
-                    setMarkers(Routes(mapInfo.current.routeProps))
-                    break;
-                case MapViewType.HEAT:
-                    result = (await heatmapCall(startDate, endDate, shouldAbort)).result;
-                    mapInfo.current.heatmapProps =  {latlngs: result.heatmap_data};
-                    setMarkers(<HeatmapLayer max={4} latlngs={mapInfo.current.heatmapProps.latlngs}/>);
-                    break;
-                case MapViewType.NONE:
-                    break;
-            }
-        } catch(e) {
-            if (e instanceof DOMException) {
-                console.log("Request Was Aborted");
-            } else {
-                throw new TypeError(`Unexpected Exception ${e}`);
-            }
-        } finally {
-            setLoading(false);
+    let result;
+    try {
+        switch (selectedMode.valueOf()) {
+            case MapViewType.INTO_UTAH:
+                result = (await toUtahCall(startDate, endDate, shouldAbort, skipNumber, maxResults)).result;
+                mapInfo.current.routeProps = { routes: result }
+                setMarkers(Routes(mapInfo.current.routeProps))
+                break;
+            case MapViewType.OUT_OF_UTAH:
+                result = (await fromUtahCall(startDate, endDate, shouldAbort, skipNumber, maxResults)).result;
+                mapInfo.current.routeProps = { routes: result }
+                setMarkers(Routes(mapInfo.current.routeProps))
+                break;
+            case MapViewType.HEAT:
+                result = (await heatmapCall(startDate, endDate, shouldAbort, eps, minSamples)).result;
+                mapInfo.current.heatmapProps = { latlngs: result.heatmap_data };
+                setMarkers(<HeatmapLayer max={4} latlngs={mapInfo.current.heatmapProps.latlngs} />);
+                break;
+            case MapViewType.NONE:
+                break;
         }
+    } catch (e) {
+        if (e instanceof DOMException) {
+            console.log("Request Was Aborted");
+        } else {
+            throw new TypeError(`Unexpected Exception ${e}`);
+        }
+    } finally {
+        setLoading(false);
+    }
 }
 
-const heatmapCall = async (startDate: Date, endDate: Date, abortController: AbortController) => {
+const heatmapCall = async (startDate: Date, endDate: Date, abortController: AbortController, eps: number, minSamples: number) => {
     let heatmapResponse = await fetch(`/api/queries/heatmap`, {
         method: "POST",
         headers: [["Content-Type", "application/json"],],
         body: JSON.stringify({
             month: startDate.getMonth() + 1,
-            eps: 0.00005,
-            minSamples: 3,
+            eps: eps,
+            minSamples: minSamples,
             startDate: startDate.toISOString(),
             endDate: endDate.toISOString(),
         })
