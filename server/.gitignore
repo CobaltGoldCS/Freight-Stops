@@ -1,5 +1,4 @@
 node_modules
 .env
-dist
 wait-for-it.sh
 .vscode
