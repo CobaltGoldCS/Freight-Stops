@@ -505,7 +505,7 @@ def main():
     }
     
     # Construct file path
-    file_path = os.path.join("monthly_route_data", "routes", f"month_{args.month:02d}.csv")
+    file_path = os.path.join("monthly_route_data", f"month_{args.month:02d}.csv")
     if not os.path.exists(file_path):
         print(f"Error: File {file_path} does not exist")
         return
