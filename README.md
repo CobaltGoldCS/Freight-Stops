@@ -16,7 +16,6 @@ A visualization and analysis platform for freight movement and stop data in Utah
 - [Usage Guide](#usage-guide)
 - [Project Structure](#project-structure)
 - [Development Guide](#development-guide)
-- [License](#license)
 
 ## Features
 
@@ -300,21 +299,6 @@ The client is a React-based web application that provides an interactive interfa
    - Responsive design for different screen sizes
 
 The client communicates with the API server to fetch and display data, providing a user-friendly interface for exploring and analyzing freight movement patterns.
-
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-Please follow the existing code style and include tests for new features.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
