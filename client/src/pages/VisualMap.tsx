@@ -40,12 +40,12 @@ export const VisualMap = () => {
         abortController.current = new AbortController();
         setLoading(true);
 
-        // Set a timeout to automatically stop loading after 60 seconds
+        // Set a timeout to automatically stop loading after 120 seconds
         loadingTimeout.current = setTimeout(() => {
             setSelectedMode(MapViewType.NONE);
             setLoading(false);
             abortController.current.abort();
-        }, 60000);
+        }, 120000);
 
         updateSelectedMode(
             selectedMode,
