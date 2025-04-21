@@ -84,11 +84,16 @@ A visualization and analysis platform for freight movement and stop data in Utah
    - Stop data: `db_worker/monthly_stop_data`
    - Route data: `db_worker/monthly_route_data`
 
-2. Run data loading scripts:
+2. Run data loading scripts for however many months you wish to load:
    ```bash
    cd db_worker
    python load_stop_data_into_db_parallel.py --month 1 --host localhost --password password
    python load_route_data_into_db_parallel.py --month 1 --host localhost --password password
+   ```
+   * If you do not have PostgreSQL installed on your computer, you can run the commands inside the container like so:
+   ```bash
+   docker exec freight_db_worker python load_stop_data_into_db_parallel.py --month 1 --host db --password password
+   docker exec freight_db_worker python load_route_data_into_db_parallel.py --month 1 --host db --password password
    ```
 
 3. Verify data loading:
