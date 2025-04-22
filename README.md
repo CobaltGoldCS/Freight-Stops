@@ -48,7 +48,7 @@ A visualization and analysis platform for freight movement and stop data in Utah
 1. Clone the repository:
    ```bash
    git clone [repository-url]
-   cd freight-data
+   cd Freight-Data
    ```
 
 2. Copy the .env.example files into .env files
@@ -85,11 +85,15 @@ A visualization and analysis platform for freight movement and stop data in Utah
 > **Note**: Route data requires approximately 80GB of storage space.
 
 ### Loading Data
-1. Copy data files to appropriate directories:
+1. Create the following directories:
+   - `db_worker/monthly_stop_data`
+   - `db_worker/monthly_route_data`
+
+2. Copy data files into the appropriate directories
    - Stop data: `db_worker/monthly_stop_data`
    - Route data: `db_worker/monthly_route_data`
 
-2. Run data loading scripts for however many months you wish to load:
+3. Run data loading scripts for however many months you wish to load:
    - To run this script locally (as opposed to inside the container) you will need to install the python packages inside of `requirements.txt` using `pip install -r requirements.txt`. Then run:
    ```bash
    cd db_worker
@@ -103,7 +107,7 @@ A visualization and analysis platform for freight movement and stop data in Utah
    ```
    - Note, however, that this will be a bit slower than running the script locally.
 
-3. Verify data loading:
+4. Verify data loading:
    ```bash
    docker exec -it freight_db psql -U postgres -d mydatabase
    ```
