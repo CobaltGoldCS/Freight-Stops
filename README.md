@@ -55,6 +55,7 @@ A visualization and analysis platform for freight movement and stop data in Utah
    ```bash
    docker compose up
    ```
+   * **Note:** the output will show that the freight_server container crashed. This is expected and is addressed in the next steps
 
 3. Initialize the database:
    ```bash
