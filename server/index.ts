@@ -1,7 +1,6 @@
-import express, { application } from 'express';
+import express from 'express';
 import { config } from 'dotenv';
 import http from 'http';
-import { Queue } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
 import queryRoutes from './src/routes/queries';
 
@@ -42,7 +41,7 @@ app.get('*', (req, res) => {
         <meta charset="UTF-8" />
         <link rel="icon" type="image/svg+xml" href="${process.env.ASSET_URL}/vite.svg" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>React-Express Starter App</title>
+        <title>Freight Route Visualizer</title>
         <script type="module">
           import RefreshRuntime from '${process.env.ASSET_URL}/@react-refresh'
           RefreshRuntime.injectIntoGlobalHook(window)

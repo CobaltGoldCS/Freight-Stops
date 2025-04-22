@@ -2,7 +2,7 @@ import { MapContainer, TileLayer } from "react-leaflet"
 import { StopMarkerProps } from "../components/StopMarkers"
 import 'leaflet/dist/leaflet.css';
 import { MapSidebar, MapViewType } from "../components/MapSidebar";
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import React, { ReactNode, useRef, useState } from "react";
 import { RouteProps, Routes, Route } from "../components/Routes";
 import HeatmapLayer, { HeatLayerProps } from "../components/HeatmapLayer";
 import { MapEventHandler } from "../components/MapEventHandler";
@@ -40,17 +40,16 @@ export const VisualMap = () => {
         abortController.current = new AbortController();
         setLoading(true);
 
-        // Set a timeout to automatically stop loading after 60 seconds
+        // Set a timeout to automatically stop loading after 120 seconds
         loadingTimeout.current = setTimeout(() => {
             setSelectedMode(MapViewType.NONE);
             setLoading(false);
             abortController.current.abort();
-        }, 60000);
+        }, 120000);
 
         updateSelectedMode(
             selectedMode,
             mapInfo,
-            bounds,
             setLoading,
             abortController.current,
             setMarkers,
@@ -99,7 +98,6 @@ export const VisualMap = () => {
 const updateSelectedMode = async (
     selectedMode: MapViewType,
     mapInfo: React.MutableRefObject<MapInfo>,
-    bounds: LatLngBounds,
     setLoading: React.Dispatch<boolean>,
     shouldAbort: AbortController,
     setMarkers: React.Dispatch<React.SetStateAction<ReactNode>>,

@@ -5,18 +5,21 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![PostGIS](https://img.shields.io/badge/PostGIS-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgis.net/)
 [![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Express.js](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+
 
 A visualization and analysis platform for freight movement and stop data in Utah.
 
 ## Table of Contents
 - [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Installation](#installation)
-- [Database Setup](#database-setup)
-- [Usage Guide](#usage-guide)
-- [Project Structure](#project-structure)
-- [Development Guide](#development-guide)
-- [License](#license)
+- [Quick Start](#quick-start)
+  - [Installation](#installation)
+  - [Database Setup](#database-setup)
+  - [Usage Guide](#usage-guide)
+- [README](#readme)
+  - [Technology Stack](#technology-stack)
+  - [Project Structure](#project-structure)
+  - [Development Guide](#development-guide)
 
 ## Features
 
@@ -32,26 +35,9 @@ A visualization and analysis platform for freight movement and stop data in Utah
   - Stop duration and location analysis
   - Customizable data sampling parameters
 
-## Technology Stack
+## Quick Start
 
-### Frontend
-- **React + TypeScript**: Modern UI framework with type safety
-- **Leaflet**: Interactive map visualization
-- **Vite**: Fast build tool and development server
-
-### Backend
-- **Express.js**: RESTful API server
-- **TypeScript**: Type-safe server code
-- **Zod**: Schema validation and type safety
-- **PostgreSQL**: Primary database
-- **PostGIS**: Spatial data processing
-- **RabbitMQ**: Message queue for async processing
-
-### Infrastructure
-- **Docker**: Containerization and deployment
-- **Docker Compose**: Multi-container orchestration
-
-## Installation
+### Installation
 
 ### Prerequisites
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
@@ -69,6 +55,7 @@ A visualization and analysis platform for freight movement and stop data in Utah
    ```bash
    docker compose up
    ```
+   * **Note:** the output will show that the freight_server container crashed. This is expected and is addressed in the next steps
 
 3. Initialize the database:
    ```bash
@@ -85,7 +72,7 @@ A visualization and analysis platform for freight movement and stop data in Utah
    - Visit `http://localhost:3000`
    - The application should be running
 
-## Database Setup
+### Database Setup
 
 ### Data Sources
 - [Monthly Stop Data](https://usu.box.com/s/0r4puni3cx0mar4181faqvaj7uaku5l3)
@@ -98,11 +85,16 @@ A visualization and analysis platform for freight movement and stop data in Utah
    - Stop data: `db_worker/monthly_stop_data`
    - Route data: `db_worker/monthly_route_data`
 
-2. Run data loading scripts:
+2. Run data loading scripts for however many months you wish to load:
    ```bash
    cd db_worker
    python load_stop_data_into_db_parallel.py --month 1 --host localhost --password password
    python load_route_data_into_db_parallel.py --month 1 --host localhost --password password
+   ```
+   * If you do not have PostgreSQL installed on your computer, you can run the commands inside the container like so:
+   ```bash
+   docker exec freight_db_worker python load_stop_data_into_db_parallel.py --month 1 --host db --password password
+   docker exec freight_db_worker python load_route_data_into_db_parallel.py --month 1 --host db --password password
    ```
 
 3. Verify data loading:
@@ -114,7 +106,7 @@ A visualization and analysis platform for freight movement and stop data in Utah
    SELECT * FROM month_01_stops LIMIT 10;
    ```
 
-## Usage Guide
+### Usage Guide
 
 ### Getting Started
 1. Navigate to `http://localhost:3000` in your web browser
@@ -217,7 +209,28 @@ When using the heatmap visualization, you can adjust:
    - Refresh the page
    - Verify database connection
 
-## Project Structure
+## README
+
+### Technology Stack
+
+### Frontend
+- **React + TypeScript**: Modern UI framework with type safety
+- **Leaflet**: Interactive map visualization
+- **Vite**: Fast build tool and development server
+
+### Backend
+- **Express.js**: RESTful API server
+- **TypeScript**: Type-safe server code
+- **Zod**: Schema validation and type safety
+- **PostgreSQL**: Primary database
+- **PostGIS**: Spatial data processing
+- **RabbitMQ**: Message queue for async processing
+
+### Infrastructure
+- **Docker**: Containerization and deployment
+- **Docker Compose**: Multi-container orchestration
+
+### Project Structure
 
 ```
 freight-data/
@@ -240,9 +253,7 @@ freight-data/
     └── load_stop_data_into_db_parallel.py 
 ```
 
-## Development Guide
-
-### API Endpoints
+### Development Guide
 
 The API server provides the following endpoints:
 
@@ -253,8 +264,6 @@ The API server provides the following endpoints:
 - `/to_utah` - Get routes ending in Utah
 
 All endpoints use Zod schemas for validation and SQL injection prevention.
-
-### Database Worker
 
 The Database Worker handles data loading and processing:
 
@@ -270,7 +279,6 @@ The Database Worker handles data loading and processing:
    - Stuck point detection
    - Parallel processing
 
-### Client Overview
 The client is a React-based web application that provides an interactive interface for visualizing and analyzing freight data. It offers several key features for users:
 
 1. **Interactive Map Visualization**
@@ -300,21 +308,6 @@ The client is a React-based web application that provides an interactive interfa
    - Responsive design for different screen sizes
 
 The client communicates with the API server to fetch and display data, providing a user-friendly interface for exploring and analyzing freight movement patterns.
-
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-Please follow the existing code style and include tests for new features.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 

@@ -3,14 +3,17 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Readme PDF
+README.pdf
+
 # C extensions
 *.so
 
 # Distribution / packaging
 .Python
 build/
-develop-eggs/
 dist/
+develop-eggs/
 downloads/
 eggs/
 .eggs/

@@ -186,7 +186,7 @@ router.post('/from_utah', async (req: Request, res: Response) => {
                 FROM month_${month.toString().padStart(2, '0')}_routes r
                 INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
             ) r
-            WHERE r.row_num % ${skipNumber ? skipNumber : 3} = 1
+            WHERE ${skipNumber === 1 ? '1=1' : `r.row_num % ${skipNumber} = 1`}
             ORDER BY r.route_id, r.timestamp
             LIMIT ${maxResults ? maxResults : 10000};
         `;
@@ -249,7 +249,7 @@ router.post('/to_utah', async (req: Request, res: Response) => {
                 FROM month_${month.toString().padStart(2, '0')}_routes r
                 INNER JOIN qualifying_trucks qt ON r.route_id = qt.route_id
             ) r
-            WHERE r.row_num % ${skipNumber ? skipNumber : 3} = 1
+            WHERE ${skipNumber === 1 ? '1=1' : `r.row_num % ${skipNumber} = 1`}
             ORDER BY r.route_id, r.timestamp
             LIMIT ${maxResults ? maxResults : 10000};
         `;

@@ -16,7 +16,7 @@ export class Route {
 
 export const Routes = (props: RouteProps) => {
     return props.routes.map((route, index) => {
-        let polyline: Polyline = <Polyline key={index} positions={route.positions} pathOptions={{
+        let polyline = <Polyline key={index} positions={route.positions} pathOptions={{
             "color": "black",
             "opacity": 0.5,
             "fillOpacity": 0.5,

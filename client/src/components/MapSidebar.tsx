@@ -141,7 +141,7 @@ export const MapSidebar = ({ selectedMode, setSelectedMode, loading, startDate, 
                     <button
                         className="sidebar-item"
                         onClick={onSubmit}
-                        disabled={loading || endDate === null}
+                        disabled={loading || endDate === null || selectedMode === MapViewType.NONE}
                     >
                         Submit Query
                     </button>
