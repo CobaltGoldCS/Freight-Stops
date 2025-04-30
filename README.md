@@ -48,27 +48,32 @@ A visualization and analysis platform for freight movement and stop data in Utah
 1. Clone the repository:
    ```bash
    git clone [repository-url]
-   cd freight-data
+   cd Freight-Data
    ```
 
-2. Start the Docker containers:
+2. Copy the .env.example files into .env files
+   - In both `db_worker/` and `server/` create a new file named `.env`
+   - Copy the contents of `.env.example` from each respective directory into `.env`
+
+3. Start the Docker containers:
    ```bash
    docker compose up
    ```
+
    * **Note:** the output will show that the freight_server container crashed. This is expected and is addressed in the next steps
 
-3. Initialize the database:
+4. Initialize the database:
    ```bash
    docker exec freight_server npm run prisma-generate
    docker exec freight_server npm run prisma-migrate
    ```
 
-4. Restart the server container:
+5. Restart the server container:
    - Open Docker Desktop
    - Navigate to Containers
    - Find and restart the `freight_server` container
 
-5. Verify the setup:
+6. Verify the setup:
    - Visit `http://localhost:3000`
    - The application should be running
 
@@ -81,23 +86,30 @@ A visualization and analysis platform for freight movement and stop data in Utah
 > **Note**: Route data requires approximately 80GB of storage space.
 
 ### Loading Data
-1. Copy data files to appropriate directories:
+1. Create the following directories:
+   - `db_worker/monthly_stop_data`
+   - `db_worker/monthly_route_data`
+
+2. Copy data files into the appropriate directories
    - Stop data: `db_worker/monthly_stop_data`
    - Route data: `db_worker/monthly_route_data`
 
-2. Run data loading scripts for however many months you wish to load:
+3. Run data loading scripts for however many months you wish to load:
+   - To run this script locally (as opposed to inside the container) you will need to install the python packages inside of `requirements.txt` using `pip install -r requirements.txt`. Then run:
    ```bash
    cd db_worker
    python load_stop_data_into_db_parallel.py --month 1 --host localhost --password password
    python load_route_data_into_db_parallel.py --month 1 --host localhost --password password
    ```
+
    * If you do not have PostgreSQL installed on your computer, you can run the commands inside the container like so:
    ```bash
    docker exec freight_db_worker python load_stop_data_into_db_parallel.py --month 1 --host db --password password
    docker exec freight_db_worker python load_route_data_into_db_parallel.py --month 1 --host db --password password
    ```
+   - Note, however, that this will be a bit slower than running the script locally.
 
-3. Verify data loading:
+4. Verify data loading:
    ```bash
    docker exec -it freight_db psql -U postgres -d mydatabase
    ```
@@ -155,14 +167,14 @@ When using the heatmap visualization, you can adjust:
    - Higher values create larger clusters
    - Lower values create more detailed, smaller clusters
    - Minimum value: 0.00001
-   - Default value: 0.00001
+   - Default value: 0.00005
 
 2. **Minimum Samples**
    - Sets the minimum number of points required to form a cluster
    - Higher values require more points to create a visible cluster
    - Lower values show more potential stop locations
    - Minimum value: 1
-   - Default value: 1
+   - Default value: 3
 
 ### Interface Features
 
