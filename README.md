@@ -59,7 +59,8 @@ A visualization and analysis platform for freight movement and stop data in Utah
    ```bash
    docker compose up
    ```
-   - **Note:** the output will show that the freight_server container crashed. This is expected and is addressed in the next steps
+
+   * **Note:** the output will show that the freight_server container crashed. This is expected and is addressed in the next steps
 
 4. Initialize the database:
    ```bash
@@ -100,7 +101,8 @@ A visualization and analysis platform for freight movement and stop data in Utah
    python load_stop_data_into_db_parallel.py --month 1 --host localhost --password password
    python load_route_data_into_db_parallel.py --month 1 --host localhost --password password
    ```
-   - If you do not have PostgreSQL installed on your computer or you do not want to install the python packages, you can run the commands inside the container using the following commands:
+
+   * If you do not have PostgreSQL installed on your computer, you can run the commands inside the container like so:
    ```bash
    docker exec freight_db_worker python load_stop_data_into_db_parallel.py --month 1 --host db --password password
    docker exec freight_db_worker python load_route_data_into_db_parallel.py --month 1 --host db --password password
